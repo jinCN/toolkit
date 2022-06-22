@@ -26,8 +26,9 @@ async function main () {
   let errors = new Writer('errors')
   let stateFile=await fs.promises.open(`${__dirname}/data/state.json`,'w')
 
-  for (let i = 0; i < 10; i++) {
-    await stateFile.writeFile(JSON.stringify({i}))
+  for (let i = 0; i < addrs.length; i++) {
+    await stateFile.truncate(0);                         // clear previous contents
+    await stateFile.write(JSON.stringify({ i }), 0)
     try {
       let t = await getTransaction(addrs[i])
   
