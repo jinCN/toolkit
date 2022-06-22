@@ -17,14 +17,15 @@ class Writer{
   }
 }
 async function main () {
-  let addrsJson = await fs.promises.readFile('addrs.json')
+  let addrsJson = await fs.promises.readFile(`${__dirname}/addrs.json`)
   let addrsObj = JSON.parse(addrsJson)
   let addrs = Object.keys(addrsObj)
   let contracts= new Writer('contracts')
   let transactions = new Writer('transactions')
   let contractByVersions = new Writer('contractByVersions')
   let errors = new Writer('errors')
-  let stateFile=await fs.promises.open(`${__dirname}/data/state.json`)
+  let stateFile=await fs.promises.open(`${__dirname}/data/state.json`,'w')
+
   for (let i = 0; i < 10; i++) {
     await stateFile.writeFile({i})
     try {
