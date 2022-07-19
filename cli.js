@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-const { getTransaction, getContract } = require('./utils')
+global.dataDir = 'data_IsContract'
+const { getTransaction, getContract, isContract } = require('./utils')
 const fs = require('fs')
 const jsonlines = require('jsonlines')
+const csv = require('csv-stream')
 const { state, loadState, saveState } = require('./state')
 class Writer{
   constructor (name) {
@@ -11,13 +13,14 @@ class Writer{
     if (this[k]) return this[k]
     let stringifier = jsonlines.stringify()
     
-    let s = fs.createWriteStream(`${__dirname}/data/${this._name}_${k}.jsonl`, { flags: 'a' })
+    let s = fs.createWriteStream(`${__dirname}/${dataDir}/${this._name}_${k}.jsonl`, { flags: 'a' })
     stringifier.pipe(s)
     this[k] = stringifier
     return this[k]
   }
 }
-async function main () {
+
+async function taskHandleAddresses () {
   await loadState()
   let addrsJson = await fs.promises.readFile(`${__dirname}/addrs.json`)
   let addrsObj = JSON.parse(addrsJson)
@@ -68,6 +71,67 @@ async function main () {
   })
   await p1
   await p2
+  console.log('done')
+}
+
+async function retry (f, k = 10) {
+  let delays = [1000, 10000, 20000, 40000, 60000];
+  let ret;
+  let hasRet = false;
+  let ee;
+  for (let i = 0; i < k; i++) {
+    try {
+      ret = await f();
+      hasRet = true;
+      break;
+    } catch (e) {
+      ee = e;
+      await sleep(delays[i % 5]);
+    }
+  }
+  if (hasRet)
+    return ret;
+  else
+    throw ee;
+}
+
+async function taskCheckIsContract () {
+  await loadState()
+  var csvStream = csv.createStream()
+  let ii=0
+  let errors = new Writer('errors')
+  let result = new Writer('result')
+  let addrs=[]
+  fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
+  on('error', function (e) {
+    console.error(e);
+    errors.at('csv').write({ i: state.i, e })
+  })
+    .on('header', function (columns) {
+      console.log(columns);
+    })
+    .on('data', async function (data) {
+      addrs.push(data.address)
+      await isContract(data.address)
+    })
+  
+//    .on('column', function (key, value) {
+//
+//        // outputs the column name associated with the value found
+//      console.log('#' + key + ' = ' + value);
+//    })
+  for(state.i = state.i||0;state.i<addrs.length;state.i++){
+    let i = state.i
+    try{
+      await retry(async ()=>{
+        let isC = await isContract(addrs[i])
+        await result.at('IsContract').write({addr:addrs[i],isContract:isC})
+      })
+    }catch (e) {
+      console.error(`e:`, e)
+      errors.at('IsContract').write({ i, addr: addrs[i], e })
+    }
+  }
   console.log('done')
 }
 

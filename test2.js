@@ -14,7 +14,7 @@ main = async () => {
 //  stringifier.write({ jsonlines: 'is awesome' })
 //  stringifier.end()
   
-  let stateFile = await fs.promises.open(`${__dirname}/data/state.json`, 'w')
+  let stateFile = await fs.promises.open(`${__dirname}/${dataDir}/state.json`, 'w')
   await stateFile.write(JSON.stringify({ i: 1 }),0)
   await stateFile.truncate(0);                         // clear previous contents
   await stateFile.write(JSON.stringify({ i: 2 }),0)

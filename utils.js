@@ -4,6 +4,13 @@ const { ethers } = require('ethers')
 const rpc = 'https://mainnet.infura.io/v3/af88d7776e3f4e1888ac935b9b16effd'
 
 const provider = new ethers.providers.JsonRpcProvider(rpc)
+async function isContract (addr) {
+  let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
+  if (bytecode && bytecode.length && bytecode.length > 2) {
+    return true
+  }
+  return false
+}
 
 async function getContract (addr) {
   let { data: { result: sourceCodeList } } = await axios.get(`http://api.etherscan.io/api`, {
@@ -11,8 +18,8 @@ async function getContract (addr) {
       apikey: 'XD7SZFJG2873DS89XC7AECA7FRTXAXKAJ1',
       action: 'getsourcecode',
       address: addr,
-      module: 'contract'
-    }
+      module: 'contract',
+    },
   })
   let { data: { result: abi } } = await axios.get(`http://api.etherscan.io/api`, {
     params: {
@@ -42,4 +49,4 @@ async function getTransaction (addr) {
   return { addr, txList }
 }
 
-module.exports = { getContract, getTransaction }
+module.exports = { getContract, getTransaction, isContract }
