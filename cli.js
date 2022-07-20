@@ -4,6 +4,7 @@ const { getTransaction, getContract, isContract } = require('./utils')
 const fs = require('fs')
 const jsonlines = require('jsonlines')
 const csv = require('csv-stream')
+const Cb = require('@superjs/cb')
 const { state, loadState, saveState } = require('./state')
 class Writer{
   constructor (name) {
@@ -102,6 +103,7 @@ async function taskCheckIsContract () {
   let errors = new Writer('errors')
   let result = new Writer('result')
   let addrs=[]
+  let cb= Cb.new()
   fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
   on('error', function (e) {
     console.error(e);
@@ -114,7 +116,10 @@ async function taskCheckIsContract () {
       addrs.push(data.address)
       await isContract(data.address)
     })
-  
+    .on('end', function (){
+      cb.ok()
+    })
+  await cb
 //    .on('column', function (key, value) {
 //
 //        // outputs the column name associated with the value found
@@ -137,7 +142,9 @@ async function taskCheckIsContract () {
 async function main(){
   console.log(1234)
 }
-main().catch(e => {
+taskCheckIsContract().catch(e => {
   console.error(`e:`, e)
+}).finally(()=>{
   saveState()
+
 })

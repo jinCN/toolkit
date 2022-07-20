@@ -12,7 +12,6 @@ async function loadState() {
   try {
     content = await fs.promises.readFile(`${dataDir}/state.json`, 'utf8')
   } catch (e) {
-    console.error(`e:`, e);
   }
   content = content || '{}'
   Object.assign(state, JSON.parse(content))
