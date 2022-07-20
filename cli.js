@@ -134,7 +134,9 @@ async function taskCheckIsContract () {
   }
   console.log('done')
 }
-
+async function main(){
+  console.log(123)
+}
 main().catch(e => {
   console.error(`e:`, e)
   saveState()
