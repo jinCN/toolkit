@@ -20,7 +20,6 @@ class Writer{
   }
 }
 
-
 async function taskHandleAddresses () {
   await loadState()
   let addrsJson = await fs.promises.readFile(`${__dirname}/addrs.json`)
