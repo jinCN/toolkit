@@ -102,8 +102,9 @@ async function taskCheckIsContract () {
   let ii=0
   let errors = new Writer('errors')
   let result = new Writer('result')
-  let addrs=[]
+  let addrs= Buffer.allocUnsafe(10534705*20)
   let cb= Cb.new()
+  let length = 0
   fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
   on('error', function (e) {
     console.error(e);
@@ -113,7 +114,8 @@ async function taskCheckIsContract () {
       console.log(columns);
     })
     .on('data', async function (data) {
-      addrs.push(data.address)
+      addrs.set(Buffer.from(data.address.substring(2),'hex'), length*20)
+      length++
     })
     .on('end', function (){
       cb.ok()
@@ -124,13 +126,14 @@ async function taskCheckIsContract () {
 //        // outputs the column name associated with the value found
 //      console.log('#' + key + ' = ' + value);
 //    })
-  for(state.i = state.i||0;state.i<addrs.length;state.i++){
-    console.log('i:',state.i)
+  for(state.i = state.i||0;state.i<length;state.i++){
+
     let i = state.i
     try{
       await retry(async ()=>{
-        let isC = await isContract(addrs[i])
-        await result.at('IsContract').write({addr:addrs[i],isContract:isC})
+        let addr = '0x'+addrs.slice(i*20,i*20+20).toString('hex')
+        let isC = await isContract(addr)
+        await result.at('IsContract').write({addr,isContract:isC})
       })
     }catch (e) {
       console.error(`e:`, e)

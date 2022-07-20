@@ -8,7 +8,7 @@ module.exports = {
       max_restarts: 0,
       kill_timeout: 10000,
       min_uptime: '10s',
-      node_args:['--max-old-space-size=1536']
+      node_args:['--max-old-space-size=8000']
     }
   ]
 }
