@@ -145,7 +145,52 @@ async function main(){
   // let x=await isContract('0xdccdce5a4c97d465841cc375fe969725fd172ab7')
   // console.log('x:',x)
 }
-taskCheckIsContract().catch(e => {
+async function taskCheckIsContract2 () {
+  await loadState()
+  var csvStream = csv.createStream()
+  let ii=0
+  let errors = new Writer('errors')
+  let result = new Writer('result')
+  let addrs=[]
+  let cb= Cb.new()
+  fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
+  on('error', function (e) {
+    console.error(e);
+    errors.at('csv').write({ i: state.i, e })
+  })
+    .on('header', function (columns) {
+      console.log(columns);
+    })
+    .on('data', async function (data) {
+      addrs.push(data.address)
+      await isContract(data.address)
+    })
+    .on('end', function (){
+      cb.ok()
+    })
+  await cb
+//    .on('column', function (key, value) {
+//
+//        // outputs the column name associated with the value found
+//      console.log('#' + key + ' = ' + value);
+//    })
+  for(state.i = state.i||0;state.i<10;state.i++){
+    console.log('i:',state.i)
+    let i = state.i
+    try{
+      await retry(async ()=>{
+        let isC = true
+        await result.at('IsContract').write({addr:addrs[i],isContract:isC})
+      })
+    }catch (e) {
+      console.error(`e:`, e)
+      errors.at('IsContract').write({ i, addr: addrs[i], e })
+    }
+  }
+  console.log('done')
+}
+
+taskCheckIsContract2().catch(e => {
   console.error(`e:`, e)
 }).finally(()=>{
   saveState()
