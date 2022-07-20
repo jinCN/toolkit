@@ -152,6 +152,8 @@ async function taskCheckIsContract2 () {
   let errors = new Writer('errors')
   let result = new Writer('result')
   let addrs=[]
+  state.j=1
+
   let cb= Cb.new()
   fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
   on('error', function (e) {
@@ -168,6 +170,7 @@ async function taskCheckIsContract2 () {
     .on('end', function (){
       cb.ok()
     })
+  state.j=2
   await cb
 //    .on('column', function (key, value) {
 //
