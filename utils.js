@@ -1,6 +1,6 @@
 const axios = require('axios')
 const { ethers } = require('ethers')
-
+ethers.errors.setLogLevel("off")
 const rpc = 'https://mainnet.infura.io/v3/af88d7776e3f4e1888ac935b9b16effd'
 
 const provider = new ethers.providers.JsonRpcProvider(rpc)
