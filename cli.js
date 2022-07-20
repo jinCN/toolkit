@@ -114,7 +114,6 @@ async function taskCheckIsContract () {
     })
     .on('data', async function (data) {
       addrs.push(data.address)
-      await isContract(data.address)
     })
     .on('end', function (){
       cb.ok()
@@ -165,7 +164,6 @@ async function taskCheckIsContract2 () {
     })
     .on('data', async function (data) {
       addrs.push(data.address)
-      await isContract(data.address)
     })
     .on('end', function (){
       cb.ok()
@@ -193,7 +191,7 @@ async function taskCheckIsContract2 () {
   console.log('done')
 }
 
-taskCheckIsContract2().catch(e => {
+taskCheckIsContract().catch(e => {
   console.error(`e:`, e)
 }).finally(()=>{
   saveState()
