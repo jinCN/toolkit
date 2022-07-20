@@ -74,7 +74,7 @@ async function taskHandleAddresses () {
   await p2
   console.log('done')
 }
-
+const sleep = ms=>new Promise(r=> setTimeout(r,ms))
 async function retry (f, k = 10) {
   let delays = [1000, 10000, 20000, 40000, 60000];
   let ret;
@@ -126,6 +126,7 @@ async function taskCheckIsContract () {
 //      console.log('#' + key + ' = ' + value);
 //    })
   for(state.i = state.i||0;state.i<addrs.length;state.i++){
+    console.log('i:',state.i)
     let i = state.i
     try{
       await retry(async ()=>{
