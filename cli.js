@@ -140,11 +140,11 @@ async function taskCheckIsContract () {
   console.log('done')
 }
 async function main(){
-  console.log(1234)
-  let x=await isContract('0xdccdce5a4c97d465841cc375fe969725fd172ab7')
-  console.log('x:',x)
+  // console.log(1234)
+  // let x=await isContract('0xdccdce5a4c97d465841cc375fe969725fd172ab7')
+  // console.log('x:',x)
 }
-main().catch(e => {
+taskCheckIsContract().catch(e => {
   console.error(`e:`, e)
 }).finally(()=>{
   saveState()
