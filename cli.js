@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 global.dataDir = 'data_IsContract'
-const { getTransaction, getContract, isContract } = require('./utils')
+const { getTransaction, getContract, isContract, mapTask } = require('./utils')
 const fs = require('fs')
 const jsonlines = require('jsonlines')
 const csv = require('csv-stream')
@@ -101,7 +101,7 @@ async function taskCheckIsContract () {
   var csvStream = csv.createStream()
   let ii=0
   let errors = new Writer('errors')
-  let result = new Writer('result')
+  let resultFile = new Writer('result')
   let addrs= Buffer.allocUnsafe(10534705*20)
   let cb= Cb.new()
   let length = 0
@@ -126,72 +126,39 @@ async function taskCheckIsContract () {
 //        // outputs the column name associated with the value found
 //      console.log('#' + key + ' = ' + value);
 //    })
-  for(state.i = state.i||0;state.i<length;state.i++){
+  state.i = state.i||0
+  let start = state.i
 
-    let i = state.i
-    try{
-      await retry(async ()=>{
-        let addr = '0x'+addrs.slice(i*20,i*20+20).toString('hex')
-        let isC = await isContract(addr)
-        await result.at('IsContract').write({addr,isContract:isC})
-      })
-    }catch (e) {
-      console.error(`e:`, e)
-      errors.at('IsContract').write({ i, addr: addrs[i], e })
-    }
-  }
+  await mapTask(
+    async j=>{
+      let i = start + j
+      try{
+        return await retry(async ()=>{
+          let addr = '0x'+addrs.slice(i*20,i*20+20).toString('hex')
+          let isC = await isContract(addr)
+          return {addr,isContract:isC}
+          // await result.at('IsContract').write({addr,isContract:isC})
+        })
+      }catch (e) {
+        console.error(`e:`, e)
+        errors.at('IsContract').write({ i, addr: addrs[i], e })
+      }
+    },
+    async (result, j)=>{
+      try {
+        let i = start + j
+        await resultFile.at('IsContract').write(result)
+        state.i = i
+      }  catch(e){
+        console.error('final error',i,e)
+      }
+    },{n:length-start,concurrency:20})
   console.log('done')
 }
 async function main(){
   // console.log(1234)
   // let x=await isContract('0xdccdce5a4c97d465841cc375fe969725fd172ab7')
   // console.log('x:',x)
-}
-async function taskCheckIsContract2 () {
-  await loadState()
-  var csvStream = csv.createStream()
-  let ii=0
-  let errors = new Writer('errors')
-  let result = new Writer('result')
-  let addrs=[]
-  state.j=1
-
-  let cb= Cb.new()
-  fs.createReadStream(`${dataDir}/nodes.csv`).pipe(csvStream).
-  on('error', function (e) {
-    console.error(e);
-    errors.at('csv').write({ i: state.i, e })
-  })
-    .on('header', function (columns) {
-      console.log(columns);
-    })
-    .on('data', async function (data) {
-      addrs.push(data.address)
-    })
-    .on('end', function (){
-      cb.ok()
-    })
-  state.j=2
-  await cb
-//    .on('column', function (key, value) {
-//
-//        // outputs the column name associated with the value found
-//      console.log('#' + key + ' = ' + value);
-//    })
-  for(state.i = state.i||0;state.i<10;state.i++){
-    console.log('i:',state.i)
-    let i = state.i
-    try{
-      await retry(async ()=>{
-        let isC = true
-        await result.at('IsContract').write({addr:addrs[i],isContract:isC})
-      })
-    }catch (e) {
-      console.error(`e:`, e)
-      errors.at('IsContract').write({ i, addr: addrs[i], e })
-    }
-  }
-  console.log('done')
 }
 
 taskCheckIsContract().catch(e => {

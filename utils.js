@@ -1,8 +1,10 @@
 const axios = require('axios')
 const { ethers } = require('ethers')
+const Cb = require('@superjs/cb')
+
 ethers.utils.Logger.setLogLevel('off')
 const rpc = 'https://mainnet.infura.io/v3/af88d7776e3f4e1888ac935b9b16effd'
-const keys=[
+const keys = [
   '1532d4c722424ce9b5bb69cf2139b0cc',
   'a102aceaf39541e0b7972ae47886d840',
   '2c615b94cf1b47ce84ca8023d5a64dca',
@@ -14,10 +16,11 @@ const keys=[
   '54dae3b76894457d88d270c1c4fa7e61',
   'c000f14a5943499bae0e3edcfbbd96aa'
 ]
-const providers = keys.map(v=>new ethers.providers.JsonRpcProvider('https://mainnet.infura.io/v3/'+v))
-let k=0
+const providers = keys.map(v => new ethers.providers.JsonRpcProvider('https://mainnet.infura.io/v3/' + v))
+let k = 0
+
 async function isContract (addr) {
-  let provider=providers[(k++)%providers.length]
+  let provider = providers[(k++) % providers.length]
   let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
   if (bytecode && bytecode.length && bytecode.length > 2) {
     return true
@@ -62,4 +65,56 @@ async function getTransaction (addr) {
   return { addr, txList }
 }
 
-module.exports = { getContract, getTransaction, isContract }
+const mapTask = async (mapper, mapperFinal = async() => {}, {n,concurrency}) => {
+  if (typeof mapper !== 'function') {
+    throw new TypeError('mapper function is required')
+  }
+
+  if (typeof mapperFinal !== 'function') {
+    throw new TypeError('mapperFinal function is required')
+  }
+
+  if (!(typeof concurrency === 'number' && concurrency >= 1)) {
+    throw new TypeError(`Expected \`concurrency\` to be a number from 1 and up, got \`${concurrency}\` (${typeof concurrency})`)
+  }
+
+
+  if (!(typeof n === 'number' && n >= 1)) {
+    throw new TypeError(`Expected \`n\` to be a number from 1 and up, got \`${n}\` (${typeof n})`)
+  }
+
+  let promises = []
+  let resolvedCount = 0
+  let cb = Cb.new()
+
+  for (let i = 0; i < n; i++) {
+    promises.push(mapper(i))
+
+    if (i >= concurrency) {
+      let ret = await promises[0]
+      promises.shift()
+      mapperFinal(ret, i - concurrency).finally(()=>{
+        resolvedCount++
+        if(resolvedCount===n){
+          cb.ok()
+        }
+      })
+    }
+
+
+
+  }
+  for (let i = 0; i < concurrency; i++) {
+    let ret = await promises[0]
+    promises.shift()
+    mapperFinal(ret, n - concurrency + i).finally(()=>{
+      resolvedCount++
+      if(resolvedCount===n){
+        cb.ok()
+      }
+    })
+  }
+  await cb
+}
+
+module.exports = { getContract, getTransaction, isContract, mapTask }
