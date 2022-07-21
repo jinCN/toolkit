@@ -76,7 +76,7 @@ async function taskHandleAddresses () {
 }
 const sleep = ms=>new Promise(r=> setTimeout(r,ms))
 async function retry (f, k = 10) {
-  let delays = [1000, 10000, 20000, 40000, 60000];
+  let delays = [1000, 2000, 3000, 10000, 20000];
   let ret;
   let hasRet = false;
   let ee;

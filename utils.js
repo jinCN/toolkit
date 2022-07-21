@@ -2,9 +2,22 @@ const axios = require('axios')
 const { ethers } = require('ethers')
 ethers.utils.Logger.setLogLevel('off')
 const rpc = 'https://mainnet.infura.io/v3/af88d7776e3f4e1888ac935b9b16effd'
-
-const provider = new ethers.providers.JsonRpcProvider(rpc)
+const keys=[
+  '1532d4c722424ce9b5bb69cf2139b0cc',
+  'a102aceaf39541e0b7972ae47886d840',
+  '2c615b94cf1b47ce84ca8023d5a64dca',
+  'ca989c6248604abdb6eb31b25f70afc7',
+  '5770c7b734cd44c8b2560fbaa239de01',
+  '9b110e408b544e22b09edfbaedccbcec',
+  '546ac9bb413048b4bbf8edc423519cc2',
+  'df044d9c323649e3ac9d54116364718f',
+  '54dae3b76894457d88d270c1c4fa7e61',
+  'c000f14a5943499bae0e3edcfbbd96aa'
+]
+const providers = keys.map(v=>new ethers.providers.JsonRpcProvider('https://mainnet.infura.io/v3/'+v))
+let k=0
 async function isContract (addr) {
+  let provider=providers[(k++)%providers.length]
   let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
   if (bytecode && bytecode.length && bytecode.length > 2) {
     return true
