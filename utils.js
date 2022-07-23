@@ -50,8 +50,9 @@ async function getContract (addr) {
       module: 'contract',
     },
   })
-
-  if (message!= 'OK') throw new Error(sourceCodeList)
+if(sourceCodeList==='Contract source code not verified'){
+  sourceCodeList = null
+} else if (message!= 'OK') throw new Error(sourceCodeList)
   let { data: { result: abi, message:message1 } } = await axios.get(`http://api.etherscan.io/api`, {
     params: {
       apikey: apiKeys[(ak++)%apiKeys.length],
