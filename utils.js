@@ -137,7 +137,7 @@ const mapTask = async (mapper, mapperFinal = async() => {}, {n,concurrency}) => 
 }
 const sleep = ms=>new Promise(r=> setTimeout(r,ms))
 async function retry (f, k = 15) {
-  let delays = [1000, 3000, 5000, 10000, 20000];
+  let delays = [1000, 3000, 10000, 20000, 40000];
   let ret;
   let hasRet = false;
   let ee;
