@@ -61,7 +61,9 @@ if(sourceCodeList==='Contract source code not verified'){
       module: 'contract'
     }
   })
-  if (message1!= 'OK') throw new Error(abi)
+  if(abi==='Contract source code not verified'){
+    abi = null
+  } else if (message1!= 'OK') throw new Error(abi)
 
   let provider = providers[(k++) % providers.length]
   let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
