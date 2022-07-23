@@ -135,7 +135,6 @@ async function taskCheckIsContract () {
     }, { n: length - start, concurrency: 20 })
   console.log('done')
 }
-
 async function taskGetContract () {
   await loadState()
   var parser = jsonlines.parse()
@@ -192,12 +191,12 @@ async function taskGetContract () {
         } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.8')) {
           contractByVersions.at('0_8').write(c)
         }
-        state.i = i
       } catch (e) {
         console.error('final error', i, e)
       }
+      state.i = i
     },
-    { n, concurrency: 20 })
+    { n, concurrency: 10 })
 
   console.log('done')
 
