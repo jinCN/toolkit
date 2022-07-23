@@ -19,6 +19,19 @@ const keys = [
 const providers = keys.map(v => new ethers.providers.JsonRpcProvider('https://mainnet.infura.io/v3/' + v))
 let k = 0
 
+const apiKeys= [
+  '2S8GHIYDBBBHJXXDV496JHPQ42GJIBA85J',
+  'NDWZ5PMNC6WQ2VNC67SRGQZ1WW8EGN5XXI',
+  '6QXYHKZ7VRN7E23STNWZHUH645E4V7I83D',
+  '3ZTKEDPPAJ7FX9QNRDSRPFWZSQFMPKNWPE',
+  'YISARRQJ43DPPFKU2S4MV2HD39WTWBMCVD',
+  'HIW48QW8X261P1TYKVD9E4EAH4PXSAU8DG',
+  '15J92X3MMHHR58IKBKDQFVGUJM5HT3UFCX',
+  'T68FUHEMQSZYB73AEFENZCAKQTYYAXFP78',
+  'ZXF9ENEKAEXDHX5ZG16XZ6FC4EPSN63JZ1',
+  'NXZKCHT3QUMDUVPV6APPYVY1GGN3ZMDKE2'
+]
+let ak = 0
 async function isContract (addr) {
   let provider = providers[(k++) % providers.length]
   let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
@@ -29,22 +42,27 @@ async function isContract (addr) {
 }
 
 async function getContract (addr) {
-  let { data: { result: sourceCodeList } } = await axios.get(`http://api.etherscan.io/api`, {
+  let { data: { result: sourceCodeList, message } } = await axios.get(`http://api.etherscan.io/api`, {
     params: {
-      apikey: 'XD7SZFJG2873DS89XC7AECA7FRTXAXKAJ1',
+      apikey: apiKeys[(ak++)%apiKeys.length],//'XD7SZFJG2873DS89XC7AECA7FRTXAXKAJ1',
       action: 'getsourcecode',
       address: addr,
       module: 'contract',
     },
   })
-  let { data: { result: abi } } = await axios.get(`http://api.etherscan.io/api`, {
+
+  if (message!= 'OK') throw new Error(sourceCodeList)
+  let { data: { result: abi, message:message1 } } = await axios.get(`http://api.etherscan.io/api`, {
     params: {
-      apikey: 'XD7SZFJG2873DS89XC7AECA7FRTXAXKAJ1',
+      apikey: apiKeys[(ak++)%apiKeys.length],
       action: 'getabi',
       address: addr,
       module: 'contract'
     }
   })
+  if (message1!= 'OK') throw new Error(abi)
+
+  let provider = providers[(k++) % providers.length]
   let bytecode = await provider.send('eth_getCode', [addr, 'latest'])
   return { addr, abi, bytecode, sourceCodeList }
 }
@@ -116,5 +134,26 @@ const mapTask = async (mapper, mapperFinal = async() => {}, {n,concurrency}) => 
   }
   await cb
 }
+const sleep = ms=>new Promise(r=> setTimeout(r,ms))
+async function retry (f, k = 15) {
+  let delays = [1000, 3000, 5000, 10000, 20000];
+  let ret;
+  let hasRet = false;
+  let ee;
+  for (let i = 0; i < k; i++) {
+    try {
+      ret = await f();
+      hasRet = true;
+      break;
+    } catch (e) {
+      ee = e;
+      await sleep(delays[i % 5]);
+    }
+  }
+  if (hasRet)
+    return ret;
+  else
+    throw ee;
+}
 
-module.exports = { getContract, getTransaction, isContract, mapTask }
+module.exports = { getContract, getTransaction, isContract, mapTask,retry }
