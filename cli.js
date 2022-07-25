@@ -135,6 +135,7 @@ async function taskCheckIsContract () {
     }, { n: length - start, concurrency: 20 })
   console.log('done')
 }
+
 async function taskGetContract () {
   await loadState()
   var parser = jsonlines.parse()
@@ -180,20 +181,23 @@ async function taskGetContract () {
     async (c, j) => {
       let i = start + j
 
-      try {
-        contracts.at(i / 1000 >> 0).write(c)
-        if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.5')) {
-          contractByVersions.at('0_5').write(c)
-        } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.6')) {
-          contractByVersions.at('0_6').write(c)
-        } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.7')) {
-          contractByVersions.at('0_7').write(c)
-        } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.8')) {
-          contractByVersions.at('0_8').write(c)
+      if(c!=null){
+        try {
+          contracts.at(i / 1000 >> 0).write(c)
+          if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.5')) {
+            contractByVersions.at('0_5').write(c)
+          } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.6')) {
+            contractByVersions.at('0_6').write(c)
+          } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.7')) {
+            contractByVersions.at('0_7').write(c)
+          } else if (c?.sourceCodeList?.[0]?.CompilerVersion?.startsWith('v0.8')) {
+            contractByVersions.at('0_8').write(c)
+          }
+        } catch (e) {
+          console.error('final error', i, e)
         }
-      } catch (e) {
-        console.error('final error', i, e)
       }
+
       state.i = i
     },
     { n, concurrency: 10 })
